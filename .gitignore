@@ -17,15 +17,15 @@ __pycache__/
 local_settings.py
 .env
 
-# Ignorar contenido de la carpeta eliminar_duplicados
-eliminar_duplicados/.DS_Store
-eliminar_duplicados/*.swp
-eliminar_duplicados/.venv/
-eliminar_duplicados/.idea/
-eliminar_duplicados/build/
-eliminar_duplicados/dist/
-eliminar_duplicados/*.egg-info
-eliminar_duplicados/*.pyc
-eliminar_duplicados/__pycache__/
-eliminar_duplicados/local_settings.py
-eliminar_duplicados/.env
+# Ignorar contenido de la carpeta python_automatizacion
+python_automatizacion/.DS_Store
+python_automatizacion/*.swp
+python_automatizacion/.venv/
+python_automatizacion/.idea/
+python_automatizacion/build/
+python_automatizacion/dist/
+python_automatizacion/*.egg-info
+python_automatizacion/*.pyc
+python_automatizacion/__pycache__/
+python_automatizacion/local_settings.py
+python_automatizacion/.env
