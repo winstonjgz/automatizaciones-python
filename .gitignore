@@ -1,3 +1,18 @@
-eliminar_duplicados/.venv/
-eliminar_duplicados/dist/
-eliminar_duplicados/.idea/
+# Ignorar archivos y carpetas comunes
+.DS_Store
+*.swp
+*~
+
+# Ignorar entornos virtuales
+.venv/
+
+# Ignorar archivos generados
+build/
+dist/
+*.egg-info
+*.pyc
+__pycache__/
+
+# Ignorar archivos de configuración locales
+local_settings.py
+.env
