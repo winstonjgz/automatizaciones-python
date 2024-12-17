@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/eliminar_duplicados.iml" filepath="$PROJECT_DIR$/.idea/eliminar_duplicados.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/automatizaciones_python.iml" filepath="$PROJECT_DIR$/.idea/automatizaciones_python.iml" />
     </modules>
   </component>
 </project>
