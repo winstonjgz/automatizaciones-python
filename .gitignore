@@ -21,6 +21,7 @@ local_settings.py
 eliminar_duplicados/.DS_Store
 eliminar_duplicados/*.swp
 eliminar_duplicados/.venv/
+eliminar_duplicados/.idea/
 eliminar_duplicados/build/
 eliminar_duplicados/dist/
 eliminar_duplicados/*.egg-info
