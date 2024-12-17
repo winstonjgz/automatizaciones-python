@@ -1,0 +1,30 @@
+# Ignorar archivos y carpetas comunes
+.DS_Store
+*.swp
+*~
+
+# Ignorar entornos virtuales
+.venv/
+
+# Ignorar archivos generados
+build/
+dist/
+*.egg-info
+*.pyc
+__pycache__/
+
+# Ignorar archivos de configuración locales
+local_settings.py
+.env
+
+# Ignorar contenido de la carpeta eliminar_duplicados
+eliminar_duplicados/.DS_Store
+eliminar_duplicados/*.swp
+eliminar_duplicados/.venv/
+eliminar_duplicados/build/
+eliminar_duplicados/dist/
+eliminar_duplicados/*.egg-info
+eliminar_duplicados/*.pyc
+eliminar_duplicados/__pycache__/
+eliminar_duplicados/local_settings.py
+eliminar_duplicados/.env
