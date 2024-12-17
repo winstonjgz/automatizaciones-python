@@ -1,6 +1,7 @@
 import os
 import shutil
 
+
 def organize_folder(folder):
     file_types = {
         'Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp'],

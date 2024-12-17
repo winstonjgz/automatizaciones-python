@@ -2,6 +2,7 @@ import flet as ft
 from borrar_duplicados import find_duplicates, hash_file, delete_file
 from organizar_archivos import organize_folder
 
+
 def main(page: ft.Page):
     page.title = "Automatizaciones / Winston Guzmán"
     page.window.width = 1000
@@ -14,17 +15,17 @@ def main(page: ft.Page):
     page.theme = ft.Theme(
         color_scheme_seed=ft.Colors.BLUE,
         visual_density=ft.VisualDensity.COMFORTABLE,
-        color_scheme = ft.ColorScheme(
+        color_scheme=ft.ColorScheme(
             primary=ft.Colors.BLUE,
             secondary=ft.Colors.ORANGE,
-            background= ft.Colors.GREY_900,
+            background=ft.Colors.GREY_900,
             surface=ft.Colors.GREY_800,
         )
     )
 
-    #Variables de estado
+    # Variables de estado
     state = {
-        "current_duplicates" : [],
+        "current_duplicates": [],
         "current_view": "duplicates",
     }
 
@@ -44,7 +45,7 @@ def main(page: ft.Page):
 
     delete_all_button = ft.ElevatedButton(
         text="Eliminar todos los duplicados",
-        color= ft.Colors.WHITE,
+        color=ft.Colors.WHITE,
         bgcolor=ft.Colors.RED_900,
         icon=ft.Icons.DELETE_SWEEP,
         visible=False,
@@ -54,7 +55,7 @@ def main(page: ft.Page):
     organize_dir_text = ft.Text(
         value="No se ha seleccionado ninguna carpeta",
         size=14,
-        color= ft.Colors.BLUE_200
+        color=ft.Colors.BLUE_200
     )
 
     organize_success_text = ft.Text(
@@ -71,8 +72,6 @@ def main(page: ft.Page):
         on_click=lambda e: organize_files()
     )
 
-
-
     def handle_folder_picker(e: ft.FilePickerResultEvent):
         if e.path:
             if state["current_view"] == "duplicates":
@@ -87,7 +86,7 @@ def main(page: ft.Page):
     def organize_directory(directory):
         try:
             organize_folder(directory)
-            organize_success_text.value= "Archivos organizados exitosamente"
+            organize_success_text.value = "Archivos organizados exitosamente"
             organize_success_text.color = ft.Colors.GREEN_400
         except Exception as e:
             organize_success_text.value = f"Error al organizar archivos: {str(e)}"
@@ -119,9 +118,9 @@ def main(page: ft.Page):
                         text="Eliminar",
                         color=ft.Colors.WHITE,
                         bgcolor=ft.Colors.RED_900,
-                        on_click=lambda e, path = dup_file: delete_duplicate(path)
+                        on_click=lambda e, path=dup_file: delete_duplicate(path)
                     )
-                    ]
+                ]
                 )
                 duplicates_list.controls.append(dup_row)
         duplicates_list.update()
@@ -134,9 +133,9 @@ def main(page: ft.Page):
 
         for dup_file, _ in state["current_duplicates"]:
             if delete_file(dup_file):
-                deleted_count +=1
+                deleted_count += 1
             else:
-                failed_count +=1
+                failed_count += 1
 
         duplicates_list.controls.clear()
         state["current_duplicates"] = []
@@ -144,7 +143,7 @@ def main(page: ft.Page):
 
         if failed_count == 0:
             result_text.value = f"Se eliminaron exitosamente {deleted_count} archivos!"
-            result_text.color= ft.Colors.GREEN_400
+            result_text.color = ft.Colors.GREEN_400
         else:
             result_text.value = f"Se eliminaron exitosamente {deleted_count} archivos. Fallaron {failed_count} archivos a ser borrados!"
             result_text.color = ft.Colors.RED_400
@@ -171,12 +170,11 @@ def main(page: ft.Page):
         result_text.update()
         delete_all_button.update()
 
-
-    #Configurar el selector de carpetas
+    # Configurar el selector de carpetas
     folder_picker = ft.FilePicker(on_result=handle_folder_picker)
     page.overlay.append(folder_picker)
 
-    #Vista de archivos duplicados
+    # Vista de archivos duplicados
     duplicate_files_view = ft.Container(
         content=ft.Column([
             ft.Container(
@@ -251,7 +249,7 @@ def main(page: ft.Page):
                     ft.Text(
                         value="Los archivos seran organizados en las siguientes carpetas: ",
                         size=14,
-                        color= ft.Colors.BLUE_200
+                        color=ft.Colors.BLUE_200
                     ),
                     ft.Text(value="• Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp']", size=14),
                     ft.Text(value="• Videos': ['.mp4', '.mkv', '.avi', '.mov']", size=14),
@@ -279,7 +277,7 @@ def main(page: ft.Page):
     def change_view(e):
         selected = e.control.selected_index
         if selected == 0:
-            #content_area.content = ft.Text(value= "Vista de Duplicados", size = 24)
+            # content_area.content = ft.Text(value= "Vista de Duplicados", size = 24)
             state["current_view"] = "duplicates"
             content_area.content = duplicate_files_view
         elif selected == 1:
@@ -287,21 +285,21 @@ def main(page: ft.Page):
             content_area.content = organize_files_view
         elif selected == 2:
             state["current_view"] = "develop"
-            content_area.content = ft.Text(value= "En desarrollo", size = 24)
+            content_area.content = ft.Text(value="En desarrollo", size=24)
         content_area.update()
 
     content_area = ft.Container(
-        #content=ft.Text(value="Vista de Duplicados", size=24),
-        content= duplicate_files_view,
+        # content=ft.Text(value="Vista de Duplicados", size=24),
+        content=duplicate_files_view,
         expand=True,
 
     )
 
-    #Menu lateral
+    # Menu lateral
 
     rail = ft.NavigationRail(
         selected_index=0,
-        label_type= ft.NavigationRailLabelType.ALL,
+        label_type=ft.NavigationRailLabelType.ALL,
         min_width=100,
         min_extended_width=200,
         group_alignment=-0.9,
@@ -325,8 +323,6 @@ def main(page: ft.Page):
         on_change=change_view,
         bgcolor=ft.Colors.GREY_900,
     )
-
-
 
     """page.add(
     ft.Container(
@@ -361,8 +357,6 @@ def main(page: ft.Page):
 
         )
     )
-
-
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import os
 import hashlib
 import flet as ft
 
+
 def hash_file(filename):
     h = hashlib.md5()
     with open(filename, 'rb') as file:
@@ -10,12 +11,11 @@ def hash_file(filename):
     return h.hexdigest()
 
 
-
 def find_duplicates(folder):
     hashes = {}
     duplicates = []
     for dirpath, _, filenames in os.walk(folder):
-         for f in filenames:
+        for f in filenames:
             fullpath = os.path.join(dirpath, f)
             file_hash = hash_file(fullpath)
             if file_hash in hashes:
@@ -24,12 +24,14 @@ def find_duplicates(folder):
                 hashes[file_hash] = fullpath
     return duplicates
 
+
 def delete_file(filepath):
     try:
         os.remove(filepath)
         return True
     except Exception as e:
         return False
+
 
 def handle_folder_picker(e: ft.FilePickerResultEvent):
     if e.path:
