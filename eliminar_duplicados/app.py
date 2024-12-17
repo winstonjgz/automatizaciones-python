@@ -1,8 +1,9 @@
 import flet as ft
 from borrar_duplicados import find_duplicates, hash_file, delete_file
+from organizar_archivos import organize_folder
 
 def main(page: ft.Page):
-    page.title = "Borrado de archivos duplicados"
+    page.title = "Automatizaciones / Winston Guzmán"
     page.window.width = 1000
     page.window.height = 700
     page.padding = 0
@@ -24,6 +25,7 @@ def main(page: ft.Page):
     #Variables de estado
     state = {
         "current_duplicates" : [],
+        "current_view": "duplicates",
     }
 
     selected_dir_text = ft.Text(
@@ -49,12 +51,48 @@ def main(page: ft.Page):
         on_click=lambda e: delete_all_duplicates()
     )
 
+    organize_dir_text = ft.Text(
+        value="No se ha seleccionado ninguna carpeta",
+        size=14,
+        color= ft.Colors.BLUE_200
+    )
+
+    organize_success_text = ft.Text(
+        size=14,
+        weight=ft.FontWeight.BOLD,
+    )
+
+    organize_all_button = ft.ElevatedButton(
+        text="Organizar archivos",
+        color=ft.Colors.WHITE,
+        bgcolor=ft.Colors.RED_900,
+        icon=ft.Icons.DELETE_SWEEP,
+        visible=False,
+        on_click=lambda e: organize_files()
+    )
+
+
 
     def handle_folder_picker(e: ft.FilePickerResultEvent):
         if e.path:
-            selected_dir_text.value = f"Carpeta seleccionada: {e.path}"
-            selected_dir_text.update()
-            scan_directory(e.path)
+            if state["current_view"] == "duplicates":
+                selected_dir_text.value = f"Carpeta seleccionada: {e.path}"
+                selected_dir_text.update()
+                scan_directory(e.path)
+            elif state["current_view"] == "organize":
+                organize_dir_text.value = f"Carpeta seleccionada: {e.path}"
+                organize_dir_text.update()
+                organize_directory(e.path)
+
+    def organize_directory(directory):
+        try:
+            organize_folder(directory)
+            organize_success_text.value= "Archivos organizados exitosamente"
+            organize_success_text.color = ft.Colors.GREEN_400
+        except Exception as e:
+            organize_success_text.value = f"Error al organizar archivos: {str(e)}"
+            organize_success_text.color = ft.Colors.RED_400
+        organize_success_text.update()
 
     def scan_directory(directory):
         duplicates_list.controls.clear()
@@ -152,7 +190,7 @@ def main(page: ft.Page):
             ),
             ft.Row([
                 ft.ElevatedButton(
-                    text="Seleccionar carperta",
+                    text="Seleccionar carpeta",
                     icon=ft.Icons.FOLDER_OPEN,
                     color=ft.Colors.WHITE,
                     bgcolor=ft.Colors.BLUE_900,
@@ -180,13 +218,75 @@ def main(page: ft.Page):
         expand=True,
     )
 
+    # Vista de archivos a organizar
+    organize_files_view = ft.Container(
+        content=ft.Column([
+            ft.Container(
+                content=ft.Text(
+                    value="Organizar archivos por tipo",
+                    size=28,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_200
+                ),
+                margin=ft.margin.only(bottom=20)
+            ),
+            ft.Row([
+                ft.ElevatedButton(
+                    text="Seleccionar carpeta",
+                    icon=ft.Icons.FOLDER_OPEN,
+                    color=ft.Colors.WHITE,
+                    bgcolor=ft.Colors.BLUE_900,
+                    on_click=lambda _: folder_picker.get_directory_path()
+                ),
+
+            ]),
+            ft.Container(
+                content=organize_dir_text,
+                margin=ft.margin.only(top=10, bottom=10)
+            ),
+            organize_success_text,
+
+            ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value="Los archivos seran organizados en las siguientes carpetas: ",
+                        size=14,
+                        color= ft.Colors.BLUE_200
+                    ),
+                    ft.Text(value="• Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp']", size=14),
+                    ft.Text(value="• Videos': ['.mp4', '.mkv', '.avi', '.mov']", size=14),
+                    ft.Text(value="• Documentos PDF': ['.pdf']", size=14),
+                    ft.Text(value="• Documentos Word': ['.doc', '.txt', '.docx']", size=14),
+                    ft.Text(value="• Documentos Excel-Calc': ['.xls', '.xlsx', '.xlsm', '.ods']", size=14),
+                    ft.Text(value="• Presentaciones': ['.ppt', '.pptx']", size=14),
+                    ft.Text(value="• Datasets': ['.csv', '.mdb', '.sav', '.accdb', '.sql']", size=14),
+                    ft.Text(value="• Programas': ['.exe', '.msi']", size=14),
+                    ft.Text(value="• Comprimidos': ['.rar', '.zip', '.tgz']", size=14),
+                    ft.Text(value="• Imagenes Sistemas': ['.iso', '.deb']", size=14),
+                    ft.Text(value="• Audios': ['.mp3']", size=14),
+                ]),
+                border=ft.border.all(width=2, color=ft.Colors.BLUE_400),
+                border_radius=10,
+                padding=20,
+                margin=ft.margin.only(top=10),
+                bgcolor=ft.Colors.GREY_800,
+            )
+        ]),
+        padding=30,
+        expand=True,
+    )
 
     def change_view(e):
         selected = e.control.selected_index
         if selected == 0:
             #content_area.content = ft.Text(value= "Vista de Duplicados", size = 24)
+            state["current_view"] = "duplicates"
             content_area.content = duplicate_files_view
         elif selected == 1:
+            state["current_view"] = "organize"
+            content_area.content = organize_files_view
+        elif selected == 2:
+            state["current_view"] = "develop"
             content_area.content = ft.Text(value= "En desarrollo", size = 24)
         content_area.update()
 
@@ -210,6 +310,11 @@ def main(page: ft.Page):
                 icon=ft.Icons.DELETE_FOREVER,
                 selected_icon=ft.Icons.DELETE_FOREVER,
                 label="Duplicados"
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.Icons.FOLDER_COPY,
+                selected_icon=ft.Icons.FOLDER_COPY,
+                label="Organizar"
             ),
             ft.NavigationRailDestination(
                 icon=ft.Icons.ADD_HOME_WORK,
