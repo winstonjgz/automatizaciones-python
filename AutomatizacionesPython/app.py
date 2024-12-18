@@ -1,10 +1,11 @@
 import flet as ft
 from borrar_duplicados import find_duplicates, hash_file, delete_file
 from organizar_archivos import organize_folder
+from redim_img import batch_resize
 
 
 def main(page: ft.Page):
-    page.title = "Automatizaciones / Winston Guzmán"
+    page.title = "Automatizaciones / Winston Guzmán 2024"
     page.window.width = 1000
     page.window.height = 700
     page.padding = 0
@@ -27,6 +28,9 @@ def main(page: ft.Page):
     state = {
         "current_duplicates": [],
         "current_view": "duplicates",
+        "resize_input_folder": "",
+        "resize_output_folder": "",
+        "selecting_resize_output": False,
     }
 
     selected_dir_text = ft.Text(
@@ -52,6 +56,8 @@ def main(page: ft.Page):
         on_click=lambda e: delete_all_duplicates()
     )
 
+
+    #Controles de el organizador
     organize_dir_text = ft.Text(
         value="No se ha seleccionado ninguna carpeta",
         size=14,
@@ -72,6 +78,8 @@ def main(page: ft.Page):
         on_click=lambda e: organize_files()
     )
 
+
+
     def handle_folder_picker(e: ft.FilePickerResultEvent):
         if e.path:
             if state["current_view"] == "duplicates":
@@ -82,6 +90,55 @@ def main(page: ft.Page):
                 organize_dir_text.value = f"Carpeta seleccionada: {e.path}"
                 organize_dir_text.update()
                 organize_directory(e.path)
+            elif state["current_view"] == "resize":
+                if state["selecting_resize_output"]:
+                    state["resize_output_folder"] = e.path
+                    resize_output_text.value = f"Carpeta de salida: {e.path}"
+                    resize_output_text.update()
+                else:
+                    state["resize_input_folder"] = e.path
+                    resize_input_text.value = f"Carpeta de entrada: {e.path}"
+                    resize_input_text.update()
+
+
+    def select_input_folder():
+        state["selecting_resize_output"] = False
+        folder_picker.get_directory_path()
+
+    def select_output_folder():
+        state["selecting_resize_output"] = True
+        folder_picker.get_directory_path()
+
+    def resize_images():
+        try:
+            if not state["resize_input_folder"] or not state["resize_output_folder"]:
+                resize_result_text.value = "Error: Selecciona las carpetas de origen y destino"
+                resize_result_text.color = ft.Colors.RED_400
+                resize_result_text.update()
+                return
+            width_new = int(width_field.value)
+            height_new = int(height_field.value)
+
+            if width_new<= 0 or height_new<=0:
+                resize_result_text.value = "Error: Las dimensiones deben ser mayores a 0"
+                resize_result_text.color = ft.Colors.RED_400
+                resize_result_text.update()
+                return
+            batch_resize(state["resize_input_folder"], state["resize_output_folder"], width_new, height_new)
+            resize_result_text.value = "Imagenes redimensionadas exitosamente"
+            resize_result_text.color = ft.Colors.GREEN_400
+            resize_result_text.update()
+        except ValueError:
+            resize_result_text.value = "Error: Ingresa dimensiones validas"
+            resize_result_text.color = ft.Colors.RED_400
+            resize_result_text.update()
+        except Exception as e:
+            resize_result_text.value = f"Error: al redimensionar {str(e)}"
+            resize_result_text.color = ft.Colors.RED_400
+            resize_result_text.update()
+
+
+
 
     def organize_directory(directory):
         try:
@@ -251,12 +308,12 @@ def main(page: ft.Page):
                         size=14,
                         color=ft.Colors.BLUE_200
                     ),
-                    ft.Text(value="• Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp']", size=14),
-                    ft.Text(value="• Videos': ['.mp4', '.mkv', '.avi', '.mov']", size=14),
+                    ft.Text(value="• Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp', '.tif', '.ico', '.odg']", size=14),
+                    ft.Text(value="• Videos': ['.mp4', '.mkv', '.avi', '.mov', '.mpg', '.3gp', '.wmv', '.dvd', '.ogg', '.flv']", size=14),
                     ft.Text(value="• Documentos PDF': ['.pdf']", size=14),
-                    ft.Text(value="• Documentos Word': ['.doc', '.txt', '.docx']", size=14),
+                    ft.Text(value="• Documentos Word': ['.doc', '.txt', '.docx', '.odt']", size=14),
                     ft.Text(value="• Documentos Excel-Calc': ['.xls', '.xlsx', '.xlsm', '.ods']", size=14),
-                    ft.Text(value="• Presentaciones': ['.ppt', '.pptx']", size=14),
+                    ft.Text(value="• Presentaciones': ['.ppt', '.pptx', '.odp']", size=14),
                     ft.Text(value="• Datasets': ['.csv', '.mdb', '.sav', '.accdb', '.sql']", size=14),
                     ft.Text(value="• Programas': ['.exe', '.msi']", size=14),
                     ft.Text(value="• Comprimidos': ['.rar', '.zip', '.tgz']", size=14),
@@ -274,6 +331,128 @@ def main(page: ft.Page):
         expand=True,
     )
 
+    # Controles vista redimensionar imagenes
+    resize_input_text = ft.Text(
+        value="Carpeta de entrada: No seleccionada",
+        size=14,
+        color= ft.Colors.BLUE_200
+    )
+
+    resize_output_text = ft.Text(
+        value="Carpeta de salida: No seleccionada",
+        size=14,
+        color=ft.Colors.BLUE_200
+    )
+
+    resize_result_text = ft.Text(size=14, weight=ft.FontWeight.BOLD)
+
+    width_field = ft.TextField(
+        label= "Ancho",
+        value="800",
+        width=100,
+        text_align=ft.TextAlign.RIGHT,
+        keyboard_type=ft.KeyboardType.NUMBER,
+
+    )
+
+    height_field = ft.TextField(
+        label="Alto",
+        value="600",
+        width=100,
+        text_align=ft.TextAlign.RIGHT,
+        keyboard_type=ft.KeyboardType.NUMBER,
+
+    )
+
+
+    # Vista redimensionar imagenes
+    resize_img_view = ft.Container(
+        content=ft.Column([
+            ft.Container(
+                content=ft.Text(
+                    value="Redimensionar",
+                    size=28,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_200
+                ),
+                margin=ft.margin.only(bottom=20)
+            ),
+            ft.Row([
+                ft.ElevatedButton(
+                    text="Seleccionar carpeta de entrada",
+                    icon=ft.Icons.FOLDER_OPEN,
+                    color=ft.Colors.WHITE,
+                    bgcolor=ft.Colors.BLUE_900,
+                    on_click=lambda _: select_input_folder()
+                ),
+                ft.ElevatedButton(
+                    text="Seleccionar carpeta de salida",
+                    icon=ft.Icons.FOLDER_OPEN,
+                    color=ft.Colors.WHITE,
+                    bgcolor=ft.Colors.BLUE_900,
+                    on_click=lambda _: select_output_folder()
+                ),
+            ]),
+            ft.Container(
+                content=ft.Column([
+                    resize_input_text,
+                    resize_output_text
+                ]),
+                margin=ft.margin.only(top=10, bottom=10)
+            ),
+            ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value="Dimensiones imagen",
+                        size=14,
+                        color=ft.Colors.BLUE_200
+                    ),
+                    ft.Row([
+                        width_field,
+                        ft.Text(value='x', size=20),
+                        height_field,
+                        ft.Text(value="pixeles", size=14)
+                    ]),
+                ]),
+                margin=ft.margin.only(bottom=10)
+            ),
+            ft.ElevatedButton(
+                text="Redimensionar Imagenes",
+                icon=ft.Icons.PHOTO_SIZE_SELECT_LARGE,
+                color= ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_900,
+                on_click=lambda _: resize_images()
+            ),
+            resize_result_text,
+            ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value="Información: ",
+                        size=14,
+                        color=ft.Colors.BLUE_200
+                    ),
+                    ft.Text(
+                        value="• Se procesaran archivos de tipo: .jpg, .jpeg y .png",
+                        size=14),
+                    ft.Text(
+                        value="• Las imagenes originales no seran modificadas",
+                        size=14),
+                    ft.Text(value="• Las imagenes redimensionadas se guardaran con el prefijo 'resized'", size=14),
+
+                ]),
+                border=ft.border.all(width=2, color=ft.Colors.BLUE_400),
+                border_radius=10,
+                padding=20,
+                margin=ft.margin.only(top=10),
+                bgcolor=ft.Colors.GREY_800,
+            )
+        ]),
+        padding=30,
+        expand=True
+
+    )
+
+
     def change_view(e):
         selected = e.control.selected_index
         if selected == 0:
@@ -284,6 +463,9 @@ def main(page: ft.Page):
             state["current_view"] = "organize"
             content_area.content = organize_files_view
         elif selected == 2:
+            state["current_view"] = "resize"
+            content_area.content = resize_img_view
+        elif selected == 10:
             state["current_view"] = "develop"
             content_area.content = ft.Text(value="En desarrollo", size=24)
         content_area.update()
@@ -313,6 +495,11 @@ def main(page: ft.Page):
                 icon=ft.Icons.FOLDER_COPY,
                 selected_icon=ft.Icons.FOLDER_COPY,
                 label="Organizar"
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.Icons.PHOTO_SIZE_SELECT_LARGE,
+                selected_icon=ft.Icons.PHOTO_SIZE_SELECT_LARGE,
+                label="Redimensionar"
             ),
             ft.NavigationRailDestination(
                 icon=ft.Icons.ADD_HOME_WORK,

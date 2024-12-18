@@ -4,12 +4,12 @@ import shutil
 
 def organize_folder(folder):
     file_types = {
-        'Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp'],
-        'Videos': ['.mp4', '.mkv', '.avi', '.mov'],
+        'Imagenes': ['.jpeg', '.jpg', '.png', '.gif', '.bmp', '.webp', '.tif', '.ico', '.odg'],
+        'Videos': ['.mp4', '.mkv', '.avi', '.mov', '.mpg', '.3gp', '.wmv', '.dvd', '.ogg', '.flv'],
         'Documentos PDF': ['.pdf'],
-        'Documentos Word': ['.doc', '.txt', '.docx'],
+        'Documentos Word': ['.doc', '.txt', '.docx', '.odt'],
         'Documentos Excel-Calc': ['.xls', '.xlsx', '.xlsm', '.ods'],
-        'Presentaciones': ['.ppt', '.pptx'],
+        'Presentaciones': ['.ppt', '.pptx', '.odp'],
         'Datasets': ['.csv', '.mdb', '.sav', '.accdb', '.sql'],
         'Programas': ['.exe', '.msi'],
         'Comprimidos': ['.rar', '.zip', '.tgz'],
