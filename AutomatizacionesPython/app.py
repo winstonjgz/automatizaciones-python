@@ -69,14 +69,14 @@ def main(page: ft.Page):
         weight=ft.FontWeight.BOLD,
     )
 
-    organize_all_button = ft.ElevatedButton(
+    '''organize_all_button = ft.ElevatedButton(
         text="Organizar archivos",
         color=ft.Colors.WHITE,
         bgcolor=ft.Colors.RED_900,
         icon=ft.Icons.DELETE_SWEEP,
         visible=False,
         on_click=lambda e: organize_files()
-    )
+    )'''
 
 
 
