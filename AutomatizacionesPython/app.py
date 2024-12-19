@@ -5,24 +5,27 @@ from redim_img import batch_resize
 
 
 def main(page: ft.Page):
-    page.title = "Automatizaciones / Winston Guzmán 2024"
+    page.title = "Automatizaciones con Python"
     page.window.width = 1000
-    page.window.height = 700
+    page.window.height = 750
+    page.vertical_alignment = ft.MainAxisAlignment.START
     page.padding = 0
     page.bgcolor = ft.Colors.GREY_800
-    page.theme_mode = ft.ThemeMode.DARK
 
-    # Tema personalizado
+    # Tema personalizado (debe ir antes de theme_mode)
     page.theme = ft.Theme(
-        color_scheme_seed=ft.Colors.BLUE,
+        color_scheme_seed=ft.Colors.TEAL,
         visual_density=ft.VisualDensity.COMFORTABLE,
         color_scheme=ft.ColorScheme(
-            primary=ft.Colors.BLUE,
-            secondary=ft.Colors.ORANGE,
-            background=ft.Colors.GREY_900,
-            surface=ft.Colors.GREY_800,
+            primary=ft.Colors.TEAL_700,
+            secondary=ft.Colors.AMBER_500,
+            background=ft.Colors.GREY_200,
+            surface=ft.Colors.WHITE,
         )
     )
+
+    # Definir el modo del tema
+    page.theme_mode = ft.ThemeMode.DARK
 
     # Variables de estado
     state = {
@@ -100,7 +103,7 @@ def main(page: ft.Page):
                     resize_input_text.value = f"Carpeta de entrada: {e.path}"
                     resize_input_text.update()
 
-
+# Modulo para redimensionar imagenes
     def select_input_folder():
         state["selecting_resize_output"] = False
         folder_picker.get_directory_path()
@@ -138,7 +141,7 @@ def main(page: ft.Page):
             resize_result_text.update()
 
 
-
+# Modulo para organizar directorios en carpetas
 
     def organize_directory(directory):
         try:
@@ -184,6 +187,9 @@ def main(page: ft.Page):
         delete_all_button.update()
         result_text.update()
 
+
+#Modulo para borrar archivos duplicados
+
     def delete_all_duplicates():
         deleted_count = 0
         failed_count = 0
@@ -227,9 +233,59 @@ def main(page: ft.Page):
         result_text.update()
         delete_all_button.update()
 
-    # Configurar el selector de carpetas
+# Configurar el selector de carpetas
     folder_picker = ft.FilePicker(on_result=handle_folder_picker)
     page.overlay.append(folder_picker)
+
+    # Vista de inicio
+    home_view = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Text(
+                        value="¡Bienvenido al Sistema de Automatizaciones!",
+                        size=32,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.TEAL_300,
+                    ),
+                    margin=ft.margin.only(bottom=20),
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        value="Explora las herramientas y simplifica tus tareas.",
+                        size=20,
+                        weight=ft.FontWeight.NORMAL,
+                        color=ft.Colors.GREY_400,
+                    ),
+                    margin=ft.margin.only(bottom=20),
+                ),
+                ft.Container(
+                    content=ft.Image(
+                        src="assets/automatizacion4.png",
+                        width=500,
+                        height=400,
+                        fit=ft.ImageFit.COVER,
+                        repeat=ft.ImageRepeat.NO_REPEAT,
+                        border_radius=ft.border_radius.all(10),# Ajusta la imagen para cubrir el contenedor
+                    ),
+
+                    alignment=ft.alignment.center,  # Centra el contenido
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        value="Automatizaciones creadas con Python y Flet.",
+                        size=14,
+                        weight=ft.FontWeight.NORMAL,
+                        color=ft.Colors.GREY_400,
+                    ),
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
+        ),
+        padding=30,
+        expand=True,
+    )
 
     # Vista de archivos duplicados
     duplicate_files_view = ft.Container(
@@ -456,23 +512,26 @@ def main(page: ft.Page):
     def change_view(e):
         selected = e.control.selected_index
         if selected == 0:
-            # content_area.content = ft.Text(value= "Vista de Duplicados", size = 24)
+            state["current_view"] = "home"
+            content_area.content = home_view
+        elif selected ==1:
             state["current_view"] = "duplicates"
             content_area.content = duplicate_files_view
-        elif selected == 1:
+        elif selected == 2:
             state["current_view"] = "organize"
             content_area.content = organize_files_view
-        elif selected == 2:
+        elif selected == 3:
             state["current_view"] = "resize"
             content_area.content = resize_img_view
-        elif selected == 10:
+        elif selected == 4:
             state["current_view"] = "develop"
-            content_area.content = ft.Text(value="En desarrollo", size=24)
+            content_area.content = ft.Text(value="Próximo desarrollo", size=24)
         content_area.update()
 
     content_area = ft.Container(
         # content=ft.Text(value="Vista de Duplicados", size=24),
-        content=duplicate_files_view,
+        content=home_view,
+        margin=ft.margin.only(bottom=10),
         expand=True,
 
     )
@@ -486,6 +545,11 @@ def main(page: ft.Page):
         min_extended_width=200,
         group_alignment=-0.9,
         destinations=[
+            ft.NavigationRailDestination(
+                icon=ft.Icons.HOME,
+                selected_icon=ft.Icons.HOME,
+                label="Inicio"
+            ),
             ft.NavigationRailDestination(
                 icon=ft.Icons.DELETE_FOREVER,
                 selected_icon=ft.Icons.DELETE_FOREVER,
@@ -506,6 +570,7 @@ def main(page: ft.Page):
                 selected_icon=ft.Icons.ADD_HOME_WORK,
                 label="En desarrollo"
             )
+
         ],
         on_change=change_view,
         bgcolor=ft.Colors.GREY_900,
@@ -532,18 +597,49 @@ def main(page: ft.Page):
         expand=True
         )
     )"""
+    # Footer con información de la versión y el año
+    footer = ft.Container(
+        content=ft.Row(
+            controls=[
+                ft.Text(
+                    value="© 2024 Winston Guzmán",
+                    size=12,
+                    color=ft.Colors.GREY_600,
+                ),
+                ft.Text(
+                    value="v1.0.0",
+                    size=12,
+                    color=ft.Colors.GREY_600,
+                    text_align=ft.TextAlign.RIGHT,
+                    expand=True,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        ),
+        padding=ft.padding.all(10),
+        bgcolor=ft.Colors.GREY_100,
+        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.GREY_300)),
+
+    )
 
     page.add(
-        ft.Row(
+        ft.Column(
             [
-                rail,
-                ft.VerticalDivider(width=1),
-                content_area
+                ft.Row(
+                    [
+                        rail,
+                        ft.VerticalDivider(width=1),
+                        content_area,
+                    ],
+                    expand=True,
+                ),
+                    footer,
             ],
+            spacing=0,
             expand=True,
-
         )
     )
+
 
 
 if __name__ == "__main__":
