@@ -5,6 +5,7 @@ from borrar_duplicados import find_duplicates, hash_file, delete_file, handle_fo
 from organizar_archivos import organize_folder
 from redim_img import batch_resize
 from convertidor_imagenes import convertir_imagen
+from extraer_audio_de_videos import extract_audio
 
 
 
@@ -39,6 +40,10 @@ def main(page: ft.Page):
         "resize_output_folder": "",
         "selecting_resize_output": False,
         "convert_input_file": "",
+        "extract_audio_input_file": "",
+        "audio_extraction_progress": 0,
+        "total_videos":0,
+        "current_videos": "",
     }
 
     selected_dir_text = ft.Text(
@@ -88,6 +93,17 @@ def main(page: ft.Page):
         weight=ft.FontWeight.BOLD
     )
 
+    extract_audio_text = ft.Text(
+        value="No se ha seleccionado ningun video",
+        size=14,
+        color=ft.Colors.BLUE_200
+    )
+
+    extract_audio_result_text = ft.Text(
+        size=14,
+        weight=ft.FontWeight.BOLD
+    )
+
 
     format_dropdown = ft.Dropdown(
         label="Formato de salida",
@@ -102,16 +118,16 @@ def main(page: ft.Page):
         value='PNG'
     )
 
+    #Controles extraccion de audio
+    extract_audio_input_text = ft.Text(
+        value="No se ha seleccionado ninguna carpeta",
+        size=14,
+        color=ft.Colors.BLUE_200
+    )
 
-
-    '''organize_all_button = ft.ElevatedButton(
-        text="Organizar archivos",
-        color=ft.Colors.WHITE,
-        bgcolor=ft.Colors.RED_900,
-        icon=ft.Icons.DELETE_SWEEP,
-        visible=False,
-        on_click=lambda e: organize_files()
-    )'''
+    extract_audio_result_text = ft.Text(size=14, weight=ft.FontWeight.BOLD)
+    audio_progress = ft.ProgressBar(width=400, visible=False)
+    current_video_text = ft.Text(size=14, color=ft.Colors.BLUE_200)
 
 
     def handle_file_picker(e: ft.FilePickerResultEvent):
@@ -140,10 +156,10 @@ def main(page: ft.Page):
                     state["resize_input_folder"] = e.path
                     resize_input_text.value = f"Carpeta de entrada: {e.path}"
                     resize_input_text.update()
-            elif state["current_view"] == "convert":
-                convert_file_text.value = f"Imagen seleccionada: {e.path}"
-                convert_file_text.update()
-                organize_directory(e.path)
+            elif state["current_view"] == "extract_audio":
+                state["extract_audio_input_file"] = e.path
+                extract_audio_input_text.value = f"Carpeta seleccionada: {e.path}"
+                extract_audio_input_text.update()
 
     # Modulo para redimensionar imagenes
     def select_input_folder():
@@ -320,6 +336,45 @@ def main(page: ft.Page):
             convert_img_result_text.color = ft.Colors.RED_400
             convert_img_result_text.update()
 
+    def extraer_audio():
+        try:
+            if not state["extract_audio_input_file"]:
+                extract_audio_result_text.value= "Error: Selecciona una carpeta con videos"
+                extract_audio_result_text.color= ft.Colors.RED_400
+                extract_audio_result_text.update()
+                return
+
+            input_folder = state["extract_audio_input_file"]
+            output_folder = os.path.join(input_folder, "audios")
+            os.makedirs(output_folder, exist_ok=True)
+
+            audio_progress.value=0
+            audio_progress.visible = True
+            audio_progress.update()
+
+            def progress_callback(current, total, archivo):
+                progress = current / total
+                audio_progress.value = progress
+                audio_progress.update()
+                current_video_text.value = f"Procesando {archivo}: {current}/{total}"
+                current_video_text.update()
+
+            extract_audio(input_folder, output_folder, progress_callback)
+
+            extract_audio_result_text.value= "Extraccion completada. Los archivos de audio se guardaron en la carpeta 'audios'"
+            extract_audio_result_text.color= ft.Colors.GREEN_400
+            current_video_text.value= "Proceso finalizado!!"
+
+        except Exception as e:
+            extract_audio_result_text.value= f"Error durante la extraccion: {str(e)}"
+            extract_audio_result_text.color= ft.Colors.RED_400
+
+        finally:
+            audio_progress.visible = False
+            audio_progress.update()
+
+        extract_audio_result_text.update()
+        current_video_text.update()
 
 
     # Vista de inicio
@@ -663,6 +718,73 @@ def main(page: ft.Page):
 
     )
 
+    # Vista extraer audios
+    extract_audio_view = ft.Container(
+        content=ft.Column([
+            ft.Container(
+                content=ft.Text(
+                    value="Extraer audio de videos",
+                    size=28,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_200
+                ),
+                margin=ft.margin.only(bottom=20)
+            ),
+
+            ft.ElevatedButton(
+                text="Seleccionar carpeta de videos",
+                icon=ft.Icons.FOLDER_OPEN,
+                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_900,
+                on_click=lambda _: ""
+            ),
+            ft.Container(
+                content=ft.Column([
+                    extract_audio_text,
+                ]),
+
+                margin=ft.margin.only(top=10, bottom=10)
+            ),
+
+            ft.ElevatedButton(
+                text="Extraer audio",
+                icon=ft.Icons.AUDIOTRACK,
+                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_900,
+                on_click=lambda _: ''
+            ),
+            extract_audio_result_text,
+            ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value="Información: ",
+                        size=14,
+                        color=ft.Colors.BLUE_200
+                    ),
+                    ft.Text(
+                        value="• Formatos de videos soportados: .mp4, .avi, .mov, y .mkv",
+                        size=14),
+                    ft.Text(
+                        value="• Los archivos de audio se extraeran en formato .mp3",
+                        size=14),
+                    ft.Text(
+                        value="• Los audios extraidos se guardaran en una carpeta 'audios' dentro de la carpeta seleccionada",
+                        size=14),
+                    ft.Text(value="• Los archivos de video originales no seran modificados",
+                            size=14),
+
+                ]),
+                border=ft.border.all(width=2, color=ft.Colors.BLUE_400),
+                border_radius=10,
+                padding=20,
+                margin=ft.margin.only(top=10),
+                bgcolor=ft.Colors.GREY_800,
+            )
+        ]),
+        padding=30,
+        expand=True
+
+    )
 
     def change_view(e):
         selected = e.control.selected_index
@@ -682,6 +804,9 @@ def main(page: ft.Page):
             state["current_view"] = "convert_img"
             content_area.content = convert_img_view
         elif selected == 5:
+            state["current_view"] = "extract_audio"
+            content_area.content = extract_audio_view
+        elif selected == 6:
             state["current_view"] = "develop"
             content_area.content = ft.Text(value="Próximo desarrollo", size=24)
         content_area.update()
@@ -727,6 +852,11 @@ def main(page: ft.Page):
                 label="Convertir"
             ),
             ft.NavigationRailDestination(
+                icon=ft.Icons.AUDIOTRACK,
+                selected_icon=ft.Icons.AUDIOTRACK,
+                label="Extraer Audio"
+            ),
+            ft.NavigationRailDestination(
                 icon=ft.Icons.ADD_HOME_WORK,
                 selected_icon=ft.Icons.ADD_HOME_WORK,
                 label="En desarrollo"
@@ -737,27 +867,7 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.GREY_900,
     )
 
-    """page.add(
-    ft.Container(
-        content= ft.Column(
-            controls= [
-                ft.Text(
-                    value="Eliminar archivos duplicados",
-                    size=28,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.BLUE_200
-                    ),
-                ft.ElevatedButton(
-                    text="Boton de ejemplo",
-                    icon=ft.Icons.PLAY_ARROW
-                )
-            ],
-            horizontal_alignment = ft.CrossAxisAlignment.CENTER
-        ),
-        alignment=ft.alignment.center,
-        expand=True
-        )
-    )"""
+
     # Footer con información de la versión y el año
     footer = ft.Container(
         content=ft.Row(
