@@ -1,7 +1,11 @@
 import flet as ft
-from borrar_duplicados import find_duplicates, hash_file, delete_file
+import sys
+import os
+from borrar_duplicados import find_duplicates, hash_file, delete_file, handle_folder_picker
 from organizar_archivos import organize_folder
 from redim_img import batch_resize
+from convertidor_imagenes import convertir_imagen
+
 
 
 def main(page: ft.Page):
@@ -34,6 +38,7 @@ def main(page: ft.Page):
         "resize_input_folder": "",
         "resize_output_folder": "",
         "selecting_resize_output": False,
+        "convert_input_file": "",
     }
 
     selected_dir_text = ft.Text(
@@ -72,6 +77,33 @@ def main(page: ft.Page):
         weight=ft.FontWeight.BOLD,
     )
 
+    convert_img_text = ft.Text(
+        value="No se ha seleccionado ninguna imagen",
+        size=14,
+        color=ft.Colors.BLUE_200
+    )
+
+    convert_img_result_text = ft.Text(
+        size=14,
+        weight=ft.FontWeight.BOLD
+    )
+
+
+    format_dropdown = ft.Dropdown(
+        label="Formato de salida",
+        width=200,
+        options=[
+            ft.dropdown.Option('PNG'),
+            ft.dropdown.Option('JPEG'),
+            ft.dropdown.Option('WEBP'),
+            ft.dropdown.Option('BMP'),
+            ft.dropdown.Option('GIF'),
+        ],
+        value='PNG'
+    )
+
+
+
     '''organize_all_button = ft.ElevatedButton(
         text="Organizar archivos",
         color=ft.Colors.WHITE,
@@ -82,6 +114,12 @@ def main(page: ft.Page):
     )'''
 
 
+    def handle_file_picker(e: ft.FilePickerResultEvent):
+        if e.files and len(e.files) >0:
+            file_path = e.files[0].path
+            state["convert_input_file"] = file_path
+            convert_img_text.value = f"Imagen seleccionada: {file_path}"
+            convert_img_text.update()
 
     def handle_folder_picker(e: ft.FilePickerResultEvent):
         if e.path:
@@ -102,8 +140,12 @@ def main(page: ft.Page):
                     state["resize_input_folder"] = e.path
                     resize_input_text.value = f"Carpeta de entrada: {e.path}"
                     resize_input_text.update()
+            elif state["current_view"] == "convert":
+                convert_file_text.value = f"Imagen seleccionada: {e.path}"
+                convert_file_text.update()
+                organize_directory(e.path)
 
-# Modulo para redimensionar imagenes
+    # Modulo para redimensionar imagenes
     def select_input_folder():
         state["selecting_resize_output"] = False
         folder_picker.get_directory_path()
@@ -141,7 +183,7 @@ def main(page: ft.Page):
             resize_result_text.update()
 
 
-# Modulo para organizar directorios en carpetas
+    # Modulo para organizar directorios en carpetas
 
     def organize_directory(directory):
         try:
@@ -188,7 +230,7 @@ def main(page: ft.Page):
         result_text.update()
 
 
-#Modulo para borrar archivos duplicados
+    #Modulo para borrar archivos duplicados
 
     def delete_all_duplicates():
         deleted_count = 0
@@ -233,9 +275,52 @@ def main(page: ft.Page):
         result_text.update()
         delete_all_button.update()
 
-# Configurar el selector de carpetas
+    # Configurar selector de archivos
+    file_picker = ft.FilePicker(
+        on_result=handle_file_picker
+    )
+    file_picker.file_type = ft.FilePickerFileType.IMAGE
+    file_picker.allowed_extensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']
+
+    # Configurar el selector de carpetas
     folder_picker = ft.FilePicker(on_result=handle_folder_picker)
-    page.overlay.append(folder_picker)
+    page.overlay.extend([folder_picker, file_picker])
+
+
+
+    def resource_path(relative_path):
+        """Obtiene la ruta absoluta del recurso, funciona para .exe o ejecución directa"""
+        try:
+            base_path = sys._MEIPASS  # Directorio temporal donde PyInstaller coloca archivos
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
+
+    image_path = resource_path("assets/automatizacion4.png")
+
+    #Corvertir imagen
+    def convertir_imagen_fin():
+        try:
+            if not state["convert_input_file"]:
+                convert_img_result_text.value = "Error: Selecciona una imagen"
+                convert_img_result_text.color = ft.Colors.RED_400
+                convert_img_result_text.update()
+                return
+            if not format_dropdown.value:
+                convert_img_result_text.value = "Error: Selecciona un formato de salida"
+                convert_img_result_text.color = ft.Colors.RED_400
+                convert_img_result_text.update()
+                return
+            convertir_imagen(state["convert_input_file"], format_dropdown.value)
+            convert_img_result_text.value = "Imagen convertida exitosamente"
+            convert_img_result_text.color = ft.Colors.GREEN_400
+            convert_img_result_text.update()
+        except Exception as e:
+            convert_img_result_text.value = f"Error al convertir imagen: {str(e)}"
+            convert_img_result_text.color = ft.Colors.RED_400
+            convert_img_result_text.update()
+
+
 
     # Vista de inicio
     home_view = ft.Container(
@@ -261,7 +346,7 @@ def main(page: ft.Page):
                 ),
                 ft.Container(
                     content=ft.Image(
-                        src="assets/automatizacion4.png",
+                        src=image_path,
                         width=500,
                         height=400,
                         fit=ft.ImageFit.COVER,
@@ -421,6 +506,7 @@ def main(page: ft.Page):
     )
 
 
+
     # Vista redimensionar imagenes
     resize_img_view = ft.Container(
         content=ft.Column([
@@ -508,6 +594,75 @@ def main(page: ft.Page):
 
     )
 
+    # Vista convertir imagenes
+    convert_img_view = ft.Container(
+        content=ft.Column([
+            ft.Container(
+                content=ft.Text(
+                    value="Convertir formato de imagen",
+                    size=28,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.BLUE_200
+                ),
+                margin=ft.margin.only(bottom=20)
+            ),
+
+            ft.ElevatedButton(
+                text="Seleccionar imagen",
+                icon=ft.Icons.IMAGE,
+                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_900,
+                on_click=lambda _: file_picker.pick_files()
+            ),
+            ft.Container(
+                content=ft.Column([
+                    convert_img_text,
+                ]),
+
+                margin=ft.margin.only(top=10, bottom=10)
+            ),
+            format_dropdown,
+
+
+            ft.ElevatedButton(
+                text="Convertir Imagen",
+                icon=ft.Icons.TRANSFORM,
+                color=ft.Colors.WHITE,
+                bgcolor=ft.Colors.BLUE_900,
+                on_click=lambda _: convertir_imagen_fin()
+            ),
+            convert_img_result_text,
+            ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value="Información: ",
+                        size=14,
+                        color=ft.Colors.BLUE_200
+                    ),
+                    ft.Text(
+                        value="• Formatos soportados: .webp, .bmp, .gif, .jpeg y .png",
+                        size=14),
+                    ft.Text(
+                        value="• La imagen original no sera modificada",
+                        size=14),
+                    ft.Text(
+                        value="• La imagen convertida se guardara en la misma carpeta",
+                        size=14),
+                    ft.Text(value="• Al convertir en JPEG las imagenes con tranaparencia se convertiran a fondo blanco", size=14),
+
+                ]),
+                border=ft.border.all(width=2, color=ft.Colors.BLUE_400),
+                border_radius=10,
+                padding=20,
+                margin=ft.margin.only(top=10),
+                bgcolor=ft.Colors.GREY_800,
+            )
+        ]),
+        padding=30,
+        expand=True
+
+    )
+
 
     def change_view(e):
         selected = e.control.selected_index
@@ -524,16 +679,17 @@ def main(page: ft.Page):
             state["current_view"] = "resize"
             content_area.content = resize_img_view
         elif selected == 4:
+            state["current_view"] = "convert_img"
+            content_area.content = convert_img_view
+        elif selected == 5:
             state["current_view"] = "develop"
             content_area.content = ft.Text(value="Próximo desarrollo", size=24)
         content_area.update()
 
     content_area = ft.Container(
-        # content=ft.Text(value="Vista de Duplicados", size=24),
         content=home_view,
         margin=ft.margin.only(bottom=10),
         expand=True,
-
     )
 
     # Menu lateral
@@ -564,6 +720,11 @@ def main(page: ft.Page):
                 icon=ft.Icons.PHOTO_SIZE_SELECT_LARGE,
                 selected_icon=ft.Icons.PHOTO_SIZE_SELECT_LARGE,
                 label="Redimensionar"
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.Icons.CAMERA_ALT_OUTLINED,
+                selected_icon=ft.Icons.CAMERA_ALT_OUTLINED,
+                label="Convertir"
             ),
             ft.NavigationRailDestination(
                 icon=ft.Icons.ADD_HOME_WORK,
@@ -633,7 +794,7 @@ def main(page: ft.Page):
                     ],
                     expand=True,
                 ),
-                    footer,
+                footer,
             ],
             spacing=0,
             expand=True,
